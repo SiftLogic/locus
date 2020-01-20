@@ -267,7 +267,10 @@ send_request(State)
             {ok, ParsedURL} when element(1, ParsedURL) =:= http ->
                 [];
             {ok, ParsedURL} when element(1, ParsedURL) =:= https ->
-                [{ssl,locus_https_requests:ssl_opts_for_ca_authentication(URL)}]
+                CAOpts = locus_https_requests:ssl_opts_for_ca_authentication(URL),
+                CipherOpts = locus_https_requests:ssl_cipher_opts(),
+                SSL = [CipherOpts | CAOpts],
+                [{ssl, SSL}]
         end,
     HTTPOpts = BaseHTTPOpts  ++ ExtraHTTPOpts,
 

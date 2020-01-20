@@ -31,7 +31,8 @@
 %% ------------------------------------------------------------------
 
 -export(
-   [ssl_opts_for_ca_authentication/1
+   [ssl_opts_for_ca_authentication/1,
+    ssl_cipher_opts/0
    ]).
 
 %% ------------------------------------------------------------------
@@ -56,6 +57,18 @@
 %% ------------------------------------------------------------------
 %% API Function Definitions
 %% ------------------------------------------------------------------
+
+-spec ssl_cipher_opts() -> ssl_option().
+ssl_cipher_opts() ->
+    Defaults = ssl:cipher_suites(default, 'tlsv1.2'),
+    Ciphers = ssl:filter_cipher_suites(
+                Defaults,
+                [{cipher, fun(chacha20_poly1305) ->
+                                  false;
+                             (_) ->
+                                  true
+                          end}]),
+    {ciphers, Ciphers}.
 
 -spec ssl_opts_for_ca_authentication(string()) -> [ssl_option(), ...].
 ssl_opts_for_ca_authentication(URL) ->
