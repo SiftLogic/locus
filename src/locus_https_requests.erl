@@ -60,15 +60,24 @@
 
 -spec ssl_cipher_opts() -> ssl_option().
 ssl_cipher_opts() ->
-    Defaults = ssl:cipher_suites(default, 'tlsv1.2'),
-    Ciphers = ssl:filter_cipher_suites(
+    case erlang:function_exported(ssl, cipher_suites, 2) of
+        true ->
+            Defaults = ssl:cipher_suites(default, 'tlsv1.2'),
+            Ciphers = ssl:filter_cipher_suites(
                 Defaults,
                 [{cipher, fun(chacha20_poly1305) ->
-                                  false;
-                             (_) ->
-                                  true
+                    false;
+                    (_) ->
+                        true
                           end}]),
-    {ciphers, Ciphers}.
+            {ciphers, Ciphers};
+        false ->
+            %% Pre erlang 21
+            Version = tls_record:protocol_version('tlsv1.2'),
+            SuitesRaw = ssl_cipher:suites(Version),
+            Defaults = [ssl_cipher:suite_definition(Suite) || Suite <- SuitesRaw],
+            {ciphers, Defaults}
+    end.
 
 -spec ssl_opts_for_ca_authentication(string()) -> [ssl_option(), ...].
 ssl_opts_for_ca_authentication(URL) ->
