@@ -75,7 +75,12 @@ ssl_cipher_opts() ->
             %% Pre erlang 21
             Version = tls_record:protocol_version('tlsv1.2'),
             SuitesRaw = ssl_cipher:suites(Version),
-            Defaults = [ssl_cipher:suite_definition(Suite) || Suite <- SuitesRaw],
+            Defaults0 = [ssl_cipher:suite_definition(Suite) || Suite <- SuitesRaw],
+            Defaults = lists:filter(fun({_, chacha20_poly1305, _,_}) ->
+                                            false;
+                                       (_) ->
+                                            true
+                                    end, Defaults0),
             {ciphers, Defaults}
     end.
 
